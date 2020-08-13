@@ -1,4 +1,4 @@
-# :melon: Recommendation system for Melon playlist continuation
+# :melon: RecSys for Melon playlist continuation
 
 
 

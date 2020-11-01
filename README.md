@@ -120,23 +120,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-
-
-## 2. implicit ALS
-
-* Alternating Least Square model
-
-
-
-```
-Music nDCG: 0.085352
-Tag nDCG: 0.261288
-Score: 0.111742
-```
-
-
-
-## 3. AutoEncoder
+## 2. AutoEncoder
 
 
 

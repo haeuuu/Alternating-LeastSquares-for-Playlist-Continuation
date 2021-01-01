@@ -8,7 +8,7 @@ import heapq
 import logging
 import time
 import torch
-import pickle
+import os
 
 import numpy as np
 import pandas as pd
@@ -23,8 +23,59 @@ from implicit.evaluation import train_test_split
 from implicit.recommender_base import MatrixFactorizationBase
 from implicit.utils import check_blas_config, nonzeros
 
+from scipy.sparse import csr_matrix
+from implicit.nearest_neighbours import bm25_weight, tfidf_weight
+
 log = logging.getLogger("implicit")
 
+class Ratings:
+    """
+    train, test(또는 val) set을 받아서 tag2id dict를 구성하고 ALS 학습을 위한 coo matrix를 생성한다.
+    """
+
+    def __init__(self, train, test):  # json, pandas, pandas
+        self.train = train
+        self.test = test
+        self.data = self.train + self.test
+        self.num_song = 707989
+
+        self._get_tag2id()
+
+    def _get_tag2id(self):
+        """
+        tag의 id는 0부터 시작한다. 단 coo matrix를 구성할 때는 0 + self.num_song 부터 시작한다.
+        """
+        tag_set = set(chain.from_iterable(ply['tags'] for ply in self.data))
+        self.num_tag = len(tag_set)
+        self.tag2id = {x: i for i, x in enumerate(sorted(tag_set))}
+        self.id2tag = {i: x for x, i in self.tag2id.items()}
+
+    def get_raw_tag(self, tids):
+        return [self.id2tag[tid] for tid in tids]
+
+    def build_coo(self):
+        """
+        user id와 item id가 연속적이지 않다면 0인 row가 포함된다.
+        ratings의 크기는 (max(uid)+1, max(iid)+1)이 된다.
+        """
+        pids = []
+        iids = []
+
+        for ply in self.data:
+            rep = len(ply['songs']) + len(ply['tags'])
+            iids.extend(ply['songs'])
+            iids.extend(self.tag2id[t] + self.num_song for t in
+                        ply['tags'])  # tag2id는 0부터 시작하므로 self.tag2id[t] + self.num_song 임에 주의
+            pids.extend([ply['id']] * rep)
+
+        scores = [1] * len(pids)
+
+        ratings = csr_matrix((np.array(scores, dtype=np.float32),
+                              (np.array(pids),
+                               np.array(iids))),
+                             shape=(max(pids) + 1, self.num_song + self.num_tag))
+
+        return ratings
 
 class MyAlternatingLeastSquares(MatrixFactorizationBase):
     """
@@ -340,3 +391,20 @@ class MyAlternatingLeastSquares(MatrixFactorizationBase):
             Y = self.item_factors
             self._YtY = Y.T.dot(Y)
         return self._YtY
+
+if __name__ == '__main__':
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+    default_dir = './'
+
+    rating_builder = Ratings(train, val_que)
+    ratings = rating_builder.build_coo()
+    ratings_weighted = (bm25_weight(ratings, B=0.9) * 5).tocsr()
+
+    model = MyAlternatingLeastSquares(num_song=707989, num_tag=30197, factors=128,
+                                      regularization=0.01, dtype=np.float32, use_native=True,
+                                      use_cg=True, use_gpu=implicit.cuda.HAS_CUDA,
+                                      iterations=15, calculate_training_loss=False,
+                                      validate_step=-1, validate_N=30, validate_proportion=0.05,
+                                      num_threads=0, test_fname=os.path.join(default_dir, 'arena_data',
+                                                                             'questions/val_questions.json'))
+    model.fit(ratings_weighted.T)

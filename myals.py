@@ -1,8 +1,11 @@
 """
 Revised Implicit Alternating Least Squares
-Reference - https://github.com/benfred/implicit
 Only GPU version available
+
+Reference - https://github.com/benfred/implicit
+Reference - https://github.com/phg0804/melon-playlist-continuation
 """
+
 import functools
 import heapq
 import logging
@@ -16,6 +19,8 @@ import scipy
 import scipy.sparse
 from tqdm.auto import tqdm
 
+from weighted_ratings import Ratings
+
 import implicit.cuda
 
 from implicit.als import _als
@@ -27,55 +32,6 @@ from scipy.sparse import csr_matrix
 from implicit.nearest_neighbours import bm25_weight, tfidf_weight
 
 log = logging.getLogger("implicit")
-
-class Ratings:
-    """
-    train, test(또는 val) set을 받아서 tag2id dict를 구성하고 ALS 학습을 위한 coo matrix를 생성한다.
-    """
-
-    def __init__(self, train, test):  # json, pandas, pandas
-        self.train = train
-        self.test = test
-        self.data = self.train + self.test
-        self.num_song = 707989
-
-        self._get_tag2id()
-
-    def _get_tag2id(self):
-        """
-        tag의 id는 0부터 시작한다. 단 coo matrix를 구성할 때는 0 + self.num_song 부터 시작한다.
-        """
-        tag_set = set(chain.from_iterable(ply['tags'] for ply in self.data))
-        self.num_tag = len(tag_set)
-        self.tag2id = {x: i for i, x in enumerate(sorted(tag_set))}
-        self.id2tag = {i: x for x, i in self.tag2id.items()}
-
-    def get_raw_tag(self, tids):
-        return [self.id2tag[tid] for tid in tids]
-
-    def build_coo(self):
-        """
-        user id와 item id가 연속적이지 않다면 0인 row가 포함된다.
-        ratings의 크기는 (max(uid)+1, max(iid)+1)이 된다.
-        """
-        pids = []
-        iids = []
-
-        for ply in self.data:
-            rep = len(ply['songs']) + len(ply['tags'])
-            iids.extend(ply['songs'])
-            iids.extend(self.tag2id[t] + self.num_song for t in
-                        ply['tags'])  # tag2id는 0부터 시작하므로 self.tag2id[t] + self.num_song 임에 주의
-            pids.extend([ply['id']] * rep)
-
-        scores = [1] * len(pids)
-
-        ratings = csr_matrix((np.array(scores, dtype=np.float32),
-                              (np.array(pids),
-                               np.array(iids))),
-                             shape=(max(pids) + 1, self.num_song + self.num_tag))
-
-        return ratings
 
 class MyAlternatingLeastSquares(MatrixFactorizationBase):
     """
@@ -120,7 +76,7 @@ class MyAlternatingLeastSquares(MatrixFactorizationBase):
         Array of latent factors for each user in the training set
     """
 
-    def __init__(self, num_song=707989, num_tag=30197, factors=100,
+    def __init__(self, num_song=707989, num_tag=30197, factors=128,
                  regularization=0.01, dtype=np.float32, use_native=True,
                  use_cg=True, use_gpu=implicit.cuda.HAS_CUDA,
                  iterations=15, calculate_training_loss=False,
@@ -287,18 +243,17 @@ class MyAlternatingLeastSquares(MatrixFactorizationBase):
         X.to_host(self.user_factors)  # X를 self.user_factors로 복사
         Y.to_host(self.item_factors)  # Y를 self.item_factors로 복사
 
-        ####################################################################################################
+        ##############################################################################################################
 
         # song-factor와 tag-factor로 분리해서 저장
         self.y1 = torch.FloatTensor(self.item_factors.T[:, :self.num_song]).to("cuda")
         self.y2 = torch.FloatTensor(self.item_factors.T[:, self.num_song:self.num_song + self.num_tag]).to("cuda")
 
-    ####################################################################################################
+        ##############################################################################################################
 
     def inference_generator(self):
         """
-        self.test_fname에 들어있는 playlist 중 song이나 tag가 있는 playlist에 대해 추천 결과를 return합니다.
-
+        songs+tags 1개 이상 있는 playlist에 대해 추천 결과를 return합니다.
         :return: playlist id, rec_songs, rec_tags
         """
         mask = []
@@ -396,9 +351,12 @@ if __name__ == '__main__':
     os.environ["OPENBLAS_NUM_THREADS"] = "1"
     default_dir = './'
 
-    rating_builder = Ratings(train, val_que)
+    train_path = os.path.join(default_dir, r'orig/train.json')
+    val_que_path = os.path.join(default_dir, r'questions/val_questions.json')
+
+    rating_builder = Ratings(load_json(train_path) + load_json(val_que_path))
     ratings = rating_builder.build_coo()
-    ratings_weighted = (bm25_weight(ratings, B=0.9) * 5).tocsr()
+    ratings_weighted = 5 * rating_builder.bm25_weight(ratings).tocsr()
 
     model = MyAlternatingLeastSquares(num_song=707989, num_tag=30197, factors=128,
                                       regularization=0.01, dtype=np.float32, use_native=True,

@@ -1,12 +1,9 @@
-**:melon: Melon playlist continuation :musical_note:**
+# Matrix Factorizaion for Playlist Continuation
+다음 두가지 모델을 실험해보았습니다.
+1. Cluster 기반 Matrix Factorization
+2. BM25 기반 Matrix Factorization
 
-:heavy_check_mark: [GitHub에서 확인하기 (model1-2) ](https://github.com/haeuuu/RecSys-For-Melon-playlist-continuation)
-
-:heavy_check_mark: [Tistory에서 확인하기](https://hhhaeuuu.tistory.com/category/%F0%9F%92%96%20Project/%5BRecSys%5D%20Melon%20Playlist%20Continuation)
-
- 
-
-# 1. Cluster 기반 Matrix Factorization
+## 1 ) Cluster 기반 Matrix Factorization
 
 > #### Keywords
 >
@@ -18,7 +15,7 @@
 
 
 
-## Introduction
+### Introduction
 
 `축 처진 퇴근길을 위한 그루브`, `기분 좋은 밤 산책을 위한 적당한 텐션의 음악`, `무드등 켜고 혼술하며 듣는 감각적인 그루브` ...
 
@@ -30,7 +27,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-## Preprocessing
+### Preprocessing
 
 > 노래의 meta 정보에 playlist에서 추출한 태그 정보를 이용하여 one-hot vector ( d = (n , 457) ) 를 생성합니다.
 
@@ -68,7 +65,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-## PCA를 통한 차원 축소
+### PCA를 통한 차원 축소
 
 > PCA를 통해 중요한 feature만을 추출합니다.
 
@@ -77,13 +74,13 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-## K-means clustering
+### K-means clustering
 
 > k-means clustering을 통해 1000개의 새로운 장르를 추출합니다.
 
 
 
-## cluster에 대한 EDA
+#### cluster에 대한 EDA
 
 **:thinking: cluster가 어떤 의미를 가질 수 있을까?**
 
@@ -160,7 +157,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-## Training
+### Training
 
 `iplicit` 패키지를 이용하여 `latent factors = 128, regularization = 0.02, epochs = 100`으로 학습
 
@@ -195,7 +192,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-## Evaluation
+### Evaluation
 
 1. `playlist_id - cluster_id`가 되도록 validation에 대한 one hot vector를 생성한다.
 
@@ -207,13 +204,14 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-## Score
+### Score
 
 ```python
 Music nDCG: 0.0410008
 Tag nDCG: 0.20722
 Score: 0.0659337
 ```
+
 # 소감 :sunrise_over_mountains:
 
 실습 수업때도, 연구실에서도 항상 다짐했던 것이 있었는데 바로 '이론만 알지 말고 조그맣게라도 적용해보자!' 였다.

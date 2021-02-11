@@ -1,7 +1,9 @@
 # Matrix Factorizaion for Playlist Continuation
 다음 두가지 모델을 실험해보았습니다.
 1. Cluster 기반 Matrix Factorization
-2. BM25 기반 Matrix Factorization
+  * `cluster 기반 MF 적합 결과 구경하기.ipynb` : surprise 패키지를 이용하여 구현한 과정을 기술
+2. BM25 기반 Matrix Factorization `Score : 0.215669`
+  * `myals.py` : implicit-gpu의 als.py를 custom한 ALS 모델
 
 ## 1 ) Cluster 기반 Matrix Factorization
 
@@ -210,6 +212,15 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 Music nDCG: 0.0410008
 Tag nDCG: 0.20722
 Score: 0.0659337
+```
+
+## 2 ) BM25를 이용한 Matrix Factorization
+
+### Score
+```python
+Music nDCG: 0.178373
+Tag nDCG: 0.42701
+Score: 0.215669
 ```
 
 # 소감 :sunrise_over_mountains:

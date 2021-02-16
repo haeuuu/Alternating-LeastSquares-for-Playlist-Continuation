@@ -5,9 +5,9 @@
    implicit의 ALS를 그대로 이용해서 구현해보았습니다.
 
    ```python
-   Music nDCG: 0.0410008
-   Tag nDCG: 0.20722
-   Score: 0.0659337
+   Music nDCG: 0.135713
+   Tag nDCG: 0.375634
+   Score: 0.171701
    ```
 2. BM25 기반 Matrix Factorization
 
@@ -143,32 +143,6 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 <img src="fig/image-20201110014928876.png" alt="image-20201110014928876" style="zoom:80%;" />
 
-
-
-<br></br>
-
-#### 물론 ...
-
-결론부터 이야기하면 meta 정보 + tag > PCA > clustering > MF를 이용한 추천의 성능은 아주 좋지 않았다 ... ㅠㅠ
-
-`nDCG = 0.04` 로 장르에 따라 노래를 추천하는 **baseline 코드의 점수와 같았다.**
-
-위에서 생성된 cluster가 장르의 범주를 크게 벗어나지 못했던 것 같다. 내가 tag 정보만 포함했던 이유는 **tag를 통해서도 암묵적으로 어떤 노래들이 같이 담겼는지 말해줄 수 있을것이라고 생각했기 때문**이었다. 그러나 충분하지 못했던 것으로 보인다 !
-
-내가 원하는대로 clustering하기 위해서는 tag만 쓸 것이 아니라 **어떤 노래들이 함께 담겼는지 즉 play list에 대한 정보도 더 적극적으로 포함**해야하지 않았을까? (이는 추후에 **model 3에서 다른 방법으로 시도**해보았다 ! )
-
-
-
-비록 nDCG는 낮지만, 어떤 cluster를 추천해주었는지를 확인해보면 나름대로 **비슷한 결을 가진 노래**임을 확인할 수 있다.
-
-처음에는 "그래도 비슷한 결을 가졌으면 나쁘지 않은거 같은데 ..." 싶었다. 
-
-하지만 내가 추천 받는 사람의 입장이 되면 이야기가 달라진다. 나는 자주 '장르만 같다고 다 유사곡인가?' 하며 불만족 했던 경험이 있었다.
-
-오직 tag만 이용하여 clustering하는 방법에는 개선이 필요하다는 생각이 든다 !
-
-이후에 기술할 실험에서는 play list 정보도 포함하면서 새로운 방법으로 차원 축소를 시도한다.
-
 <br></br>
 
 ### Training
@@ -217,14 +191,10 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 ### Score
 
-base line 점수에서 큰 개선을 하지 못했다 ... 그 이유가 무엇인지 곰곰히 생각해보니 !
-
-더 다양한 rating(scoring) 정책을 펼쳐봤어야 했다 ! 깨달은 점은 블로그에 정리해보았다. => [MF의 성능을 끌어올리기 위해 고려해야할 점](https://hhhaeuuu.tistory.com/171)
-
 ```python
-Music nDCG: 0.0410008
-Tag nDCG: 0.20722
-Score: 0.0659337
+Music nDCG: 0.135713
+Tag nDCG: 0.375634
+Score: 0.171701
 ```
 
 <br></br>
@@ -246,9 +216,11 @@ Score: 0.0659337
 
 ### Score
 
-똑같이 MF 방법으로 embedding을 생성했음에도 불구하고 **최종 Score가 약 3.5배**가 되었다 !! user-item matrix의 rating 중요성을 깨달았다!
+똑같이 MF 방법으로 embedding을 생성했음에도 불구하고 **최종 Score가 약 0.05**나 상승하였다 !! user-item matrix의 rating 중요성을 깨달았다!
 
 나는 sparsity 해결이 먼저라고 생각해서 cluster 개념을 도입해본 것인데, rating을 어떻게 주느냐가 훨씬 중요한 문제였다.
+
+깨달은 점을 블로그에 정리해보았다. => [MF의 성능을 끌어올리기 위해 고려해야할 점](https://hhhaeuuu.tistory.com/171)
 
 ```python
 Music nDCG: 0.178373

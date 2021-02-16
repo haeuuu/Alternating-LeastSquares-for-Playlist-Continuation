@@ -1,21 +1,35 @@
 # Matrix Factorizaion for Playlist Continuation
 다음 두가지 모델을 실험해보았습니다.
 1. Cluster 기반 Matrix Factorization
-  * `cluster 기반 MF 적합 결과 구경하기.ipynb` : surprise 패키지를 이용하여 구현한 과정을 기술
-2. BM25 기반 Matrix Factorization `Score : 0.215669`
-  * `myals.py` : implicit-gpu의 als.py를 custom한 ALS 모델
 
-## 1 ) Cluster 기반 Matrix Factorization
+   implicit의 ALS를 그대로 이용해서 구현해보았습니다.
 
-> #### Keywords
->
-> `Matrix Factorization` `ALS` `PCA` `K-means clustering` `SVD`
+   ```python
+   Music nDCG: 0.0410008
+   Tag nDCG: 0.20722
+   Score: 0.0659337
+   ```
+2. BM25 기반 Matrix Factorization
 
+   implicit-gpu의 **ALS를 custom**하여 구현해보았습니다.
 
+   ```python
+   Music nDCG: 0.178373
+   Tag nDCG: 0.42701
+   Score: 0.215669
+   ```
+
+<br></br>
+
+## :a: Cluster 기반 Matrix Factorization
+
+>  :computer: `코드 보러가기` [cluster 기반 MF 적합 결과 구경하기.ipynb](https://github.com/haeuuu/Alternating-LeastSquares-for-Playlist-Continuation/blob/master/cluster%20%EA%B8%B0%EB%B0%98%20MF%20%EC%A0%81%ED%95%A9%20%EA%B2%B0%EA%B3%BC%20%EA%B5%AC%EA%B2%BD%ED%95%98%EA%B8%B0.ipynb)
+
+<br></br>
 
 `playlist`를 `user`로, k-means clustering으로 얻어낸 새로운 장르(군집)을 `item`으로 보고 `user-item matrix`를 생성하여 MF를 통해 적절한 군집을 추천합니다.
 
-
+<br></br>
 
 ### Introduction
 
@@ -27,7 +41,7 @@
 
 K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 찾고, 각 군집 내에서 상위 노래를 추천합니다.
 
-
+<br></br>
 
 ### Preprocessing
 
@@ -65,7 +79,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
    * 해당 노래가 속한 play list를 모두 찾아 태그를 추출한다.
    * 이 때 tag는 train data 전체에서 가장 많이 등장한 상위 110개만을 사용하였다.
 
-
+<br></br>
 
 ### PCA를 통한 차원 축소
 
@@ -74,7 +88,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 * 457차원의 one-hot vector를 180차원으로 축소합니다.
 * explained_variance_ratio = 0.9438
 
-
+<br></br>
 
 ### K-means clustering
 
@@ -82,9 +96,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-#### cluster에 대한 EDA
-
-**:thinking: cluster가 어떤 의미를 가질 수 있을까?**
+#### cluster에 대한 EDA : **:thinking: cluster가 어떤 의미를 가질 수 있을까?**
 
 댄스, 팝, 일렉트로닉 등 커다란 장르가 아닌 세세한 장르를 표현하기 위해 cluster의 개념을 도입하였다.
 
@@ -94,7 +106,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 모든 play list들은 이렇게 만들어진 cluster의 결합으로 생성될 수 있다고 가정하였다. `비오는날 cluster` `쓸쓸한 발라드 cluster` `감성적인 인디 cluster` 가 모여 `비가 추적추적 오는 쓸쓸한 날 듣기 좋은 인디 음악` 리스트를 만들어낼 것으로 기대하였다 !
 
-
+<br></br>
 
 **군집 결과를 시각화 하면 다음과 같다.**
 
@@ -112,7 +124,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 * `기분전환` , `드라이브` 처럼 어떤 노래와도 이질감이 들지 않는 (상대적으로) 태그는 널리 분포해있다.
   * 드라이브 태그가 많이 달렸다고 할지라도, 랩과 함께하는 드라이브인지 잔잔한 새벽감성과 함께하는 드라이브인지에 따라 군집이 달라질 수 있다.
 
-
+<br></br>
 
 **:blue_car: 드라이브라고 다 같은 노래를 듣는건 아니야 !**
 
@@ -122,7 +134,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="fig/image-20201110021727131.png" alt="image-20201110021727131" style="zoom:50%;" /> | <img src="fig/image-20201110021811807.png" alt="image-20201110021811807" style="zoom: 67%;" /> | <img src="fig/image-20201110021909226.png" alt="image-20201110021909226" style="zoom:50%;" /> |
 
-
+<br></br>
 
 **:dancer: 시원한 힙합이 좋을까, 감성적인 힙합이 좋을까?**
 
@@ -133,7 +145,7 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 
 
-
+<br></br>
 
 #### 물론 ...
 
@@ -157,18 +169,18 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 이후에 기술할 실험에서는 play list 정보도 포함하면서 새로운 방법으로 차원 축소를 시도한다.
 
-
+<br></br>
 
 ### Training
 
-`iplicit` 패키지를 이용하여 `latent factors = 128, regularization = 0.02, epochs = 100`으로 학습
+`implicit` 패키지를 이용하여 `latent factors = 128, regularization = 0.02, epochs = 100`으로 학습
 
 * `user `: play list
   * 이 때 모든 play list를 사용하지 않고, 속한 노래가 100곡 이상인 9004개만을 선택하였다.
 * `item `: k-means clustering을 통해 얻은 군집 1000개
 * `rating `: 대표 cluster 15개를 선정하여 1/0로 부여
 
-
+<br></br>
 
 **Rating을 어떻게 부여할 것인가에 대한 실험**
 
@@ -179,9 +191,9 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
    2. play list간에 담긴 곡 수 차이로 인해 점수 격차가 심하므로 적절한 log 변환을 취한다.
       * 왜? : 유의미 하지 않은 작은 값들은 0에 가깝게 만들고, 일정 점수 이상을 가진 값들은 비슷한 정도로 만들어주기 위해서
 
+<br></br>
 
-
-다양한 방법을 실험해본 결과, 각 play list에서 **일부를 추출**하여 1/0을 부여하는 것이 가장 적절하다고 판단하였음.
+다양한 방법을 실험해본 결과, 각 playlist에서 **일부를 추출**하여 1/0을 부여하는 것이 가장 적절하다고 판단하였음.
 
 * 평균 49개, 최대 139개의 cluster를 이용한다. play list를 대표할만한, 대부분의 곡을 포함시키는 cluster는 몇개일까?
 
@@ -192,21 +204,22 @@ K-means clustering을 통해 **더욱 세분화된 장르 군집 1000개**를 �
 
 * 각 play list마다 가장 많이 등장한 cluster top15를 골라 등장한 경우 1을, 그렇지 않은 경우 0을 부여한다.
 
+<br></br>
 
+### Recommendation
 
-### Evaluation
-
-1. `playlist_id - cluster_id`가 되도록 validation에 대한 one hot vector를 생성한다.
-
-2. MF로 적합된 `user-item matrix`와 내적한 후 가장 유사한 play list를 찾는다.
-
-3. 해당 play list에서 가장 높은 점수를 가진 cluster부터 차례로 순회하면서 해당 cluster에 속한 top30(빈도 기준) 을 추천한다.
-
-4. 노래 추천이 끝나면, 각 노래별로 train에서 매칭되었던 tag를 추출한 후 모아 빈도순으로 정렬한 후 top10을 추천한다.
+1. `playlist id`가 소비한 `song, tag`를 `cluster_id`로 변환한다.
+2. 해당 cluster의 embedding을 더하여 `playlist embedding` 을 생성한다.
+3. 생성된 embedding과 가장 유사한 playlist k개를 train set에서 찾는다.
+4. 상위 playlist들이 가진 노래와 tag를 count해보고, 빈도가 높은 것부터 차례로 추천한다.
 
 
 
 ### Score
+
+base line 점수에서 큰 개선을 하지 못했다 ... 그 이유가 무엇인지 곰곰히 생각해보니 !
+
+더 다양한 rating(scoring) 정책을 펼쳐봤어야 했다 ! 깨달은 점은 블로그에 정리해보았다. => [MF의 성능을 끌어올리기 위해 고려해야할 점](https://hhhaeuuu.tistory.com/171)
 
 ```python
 Music nDCG: 0.0410008
@@ -214,16 +227,38 @@ Tag nDCG: 0.20722
 Score: 0.0659337
 ```
 
-## 2 ) BM25를 이용한 Matrix Factorization
+<br></br>
+
+## :b: BM25를 이용한 Matrix Factorization
+
+> :computer: `코드 보러가기` : [myals.py](https://github.com/haeuuu/Alternating-LeastSquares-for-Playlist-Continuation/blob/master/myals.py) 
+
+<br></br>
+
+1. 위와 똑같이 Preprocessing
+2. BM25를 이용하여 `user-item matrix`를 채운다.
+   * BM25가 뭔데? 필기 보러가기 => [검색 랭킹 알고리즘2. BM25](https://hhhaeuuu.tistory.com/177)
+   * cluster를 만들 필요 없으므로 PCA, K-means clustering은 하지 않는다.
+3. MF를 학습한다.
+4. 추천 방법 역시 1번 모델과 똑같다.
+
+<br></br>
 
 ### Score
+
+똑같이 MF 방법으로 embedding을 생성했음에도 불구하고 **최종 Score가 약 3.5배**가 되었다 !! user-item matrix의 rating 중요성을 깨달았다!
+
+나는 sparsity 해결이 먼저라고 생각해서 cluster 개념을 도입해본 것인데, rating을 어떻게 주느냐가 훨씬 중요한 문제였다.
+
 ```python
 Music nDCG: 0.178373
 Tag nDCG: 0.42701
 Score: 0.215669
 ```
 
-# 소감 :sunrise_over_mountains:
+<br></br>
+
+# :woman_technologist: 소감
 
 실습 수업때도, 연구실에서도 항상 다짐했던 것이 있었는데 바로 '이론만 알지 말고 조그맣게라도 적용해보자!' 였다.
 
@@ -238,3 +273,13 @@ movielens 데이터를 이용하여 이론 공부와 조그마한 실습을 병�
 제대로된 첫 도전이기 때문에 '높은 점수를 얻어서 순위를 올리자'보다는 실제 데이터에 적용할 때 어떤 문제를 만날 수 있는지, 그리고 이를 해결하려면 어떤 테크닉을 써야 하는지 등을 얻어가야겠다는 목표를 가지고 천천히 도전했다.
 
 낮은 점수로라도 제출을 해보고 싶었지만 연구 인턴에서도 진행하고 있는 것들이 있었기 때문에 기간을 맞추지 못해서 아쉽다.
+
+<br></br>
+
+# :running_woman: 그리고 앞으로의 TODO !
+
+* 점수가 높은 팀의 repository를 방문하자! 점수를 높히기 위한 방법론, 코드 리뷰 등을 해보며 실력을 쌓자.
+  * [haeuuu/Neighbor-based-Collaborative-Filtering](https://github.com/haeuuu/Neighbor-based-Collaborative-Filtering)
+  * [haeuuu/Word2Vec-for-Recommendation-system](https://github.com/haeuuu/Word2Vec-for-Recommendation-system)
+* 또 다른 새로운 모델도 만들어보자
+  * [haeuuu/AutoEncoder-for-Collaborative-filtering](https://github.com/haeuuu/AutoEncoder-for-Collaborative-filtering)

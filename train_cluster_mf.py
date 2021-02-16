@@ -21,6 +21,26 @@ class ClusterBasedRecommender:
         self.train_test.reset_index(inplace=True)
         self.song_meta = pd.read_pickle(song_meta_path, typ = 'frame') # song_meta에서 freq theshold 이상인 tag만 걸러 'new_tags'에 저장해야함.
 
+    def pca(self, indicator_matrix_path, n_components = 256):
+        print('Train PCA ...')
+        indicator_matrix = pd.read_pickle(indicator_matrix_path)
+
+        pca = PCA(n_components = n_components)
+        pca_transformed = pca.fit_transform(indicator_matrix)
+        print('> Explained variance ratio :',sum(pca.explained_variance_ratio_)) # 0.93
+
+        return pd.DataFrame(data=pca_transformed, index=list(indicator_matrix.index.values))
+
+    def kmeans(self, pca_results, n_clusters = 1000, init='k-means++', max_iter=10000
+               ,batch_size=10000, random_state=0,init_size=100000):
+
+        print('Train kmeans ...')
+        self.n_clusters = n_clusters
+        kmeans = MiniBatchKMeans(n_clusters=n_clusters, init=init, max_iter=max_iter,batch_size=batch_size,
+                                 random_state=random_state, init_size=init_size).fit(pca_results)
+        pca_results['MiniBatchKmeans'] = kmeans.labels_
+        self.song_meta['new_song_id'] = pca_results['MiniBatchKmeans']
+
     def build_vocab(self):
         tags = pd.unique(list(chain.from_iterable(self.song_meta.new_tags)))
 

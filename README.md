@@ -205,7 +205,7 @@ Score: 0.171701
 
 <br></br>
 
-1. 위와 똑같이 Preprocessing
+1. 별도의 preprocessing은 거치지 않는다. 모든 song, tag 정보를 이용한다.
 2. BM25를 이용하여 `user-item matrix`를 채운다.
    * BM25가 뭔데? 필기 보러가기 => [검색 랭킹 알고리즘2. BM25](https://hhhaeuuu.tistory.com/177)
    * cluster를 만들 필요 없으므로 PCA, K-means clustering은 하지 않는다.
